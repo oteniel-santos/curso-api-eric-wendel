@@ -18,8 +18,8 @@ class MongoDB extends ICrud{
     async isConnected(){
         const state = STATUS[this._driver.readyState]
         if(state === 'Conectado') return state;
-        if(state === 'Conectando') return state;
-            await new Promisse(resolve => setTimeout(resolve,1000))
+        if(state !== 'Conectando') return state;
+            await new Promise(resolve => setTimeout(resolve,1000))
             return STATUS[this._driver.readyState];
         }
     
@@ -30,13 +30,15 @@ class MongoDB extends ICrud{
         if(!error) return;
         console.log('Falha na conexão!', error)
         } )
+
         const connection = Mongoose.connection
         this._driver = connection
         connection.once('open', ()=> console.log('Database rodando !!'));
+        this.defineModel()
         }
 
     defineModel(){
-        heroiSchema = new Mongoose.Schema({
+        const heroiSchema = new Mongoose.Schema({
             nome: {
                 type: String,
                 required: true
@@ -55,12 +57,17 @@ class MongoDB extends ICrud{
     }
 
 
-    async create(item){
-        const resultCadastrar = await model.create({
-            nome: 'Batman',
-            poder: 'Dinheiro'
-        })
+    create(item){
+        return this._herois.create(item)
         console.log('result cadastrar', resultCadastrar)
+    }
+
+    read(item, skip=0, limit=10){
+        return this._herois.find(item).skip(skip).limit(limit)
+    }
+
+    update(id, item){
+        return this._herois.updateOne({_id: id}, {$set:item})
     }
 }
 
